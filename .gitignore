@@ -5,3 +5,5 @@ start.bat
 status
 test.py
 geckodriver.log
+weapons
+templates/rendered*

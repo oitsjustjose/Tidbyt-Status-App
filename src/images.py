@@ -1,15 +1,16 @@
+"""General image magiks"""
 import base64
 import os
-from typing import List, Tuple
+from typing import List
 
 import requests
 from PIL import Image
-from webptools import cwebp, dwebp, webpmux_animate
+from webptools import dwebp
 
 from util import rel_to_abspath
 
 
-def download_image(link: str) -> Tuple[bool, str]:
+def download_image(link: str) -> str:
     """Downloads an image via url only if it doesn't exist locally"""
     out_dir = rel_to_abspath("../weapons").replace("\\", os.sep).replace("/", os.sep)
     file_name = link.split("/")[-1]
@@ -18,14 +19,12 @@ def download_image(link: str) -> Tuple[bool, str]:
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
 
-    existed = True
     if not os.path.exists(full_path):
-        existed = False
         img_data = requests.get(link).content
         with open(full_path, "wb") as handler:
             handler.write(img_data)
 
-    return (existed, full_path)
+    return full_path
 
 
 def loadout_to_b64(loadout: List[str]) -> str:
@@ -35,40 +34,25 @@ def loadout_to_b64(loadout: List[str]) -> str:
     Arguments:
         loadout (List[str]): a list of URLs for each weapon
     """
-    inputs: List[str] = []
+    frames: List[Image.Image] = []
     for img_url in loadout:
-        existed, path = download_image(img_url)
-        if not existed:  # Only resize if the image didn't already exist
-            dwebp(input_image=path, output_image=f"{path}.png", option="-o")
-            Image.open(f"{path}.png").resize((24, 24)).save(f"{path}.png")
-            cwebp(input_image=f"{path}.png", output_image=path, option="-q 100")
-            os.unlink(f"{path}.png")
-        inputs.append(f"{path} +1000+0+0+1")
+        path = download_image(img_url)
+        # Convert webp to png
+        dwebp(input_image=path, output_image=f"{path}.png", option="-o")
+        frames.append(Image.open(path).resize((24, 24)))
 
-    webpmux_animate(
-        input_images=inputs,
-        output_image=rel_to_abspath("../temp.webp"),
-        loop="10",
-        bgcolor="0,0,0,0",
+    gif_path = rel_to_abspath("../temp.gif")
+    frames[0].save(
+        gif_path,
+        format="GIF",
+        append_images=frames[1:],
+        save_all=True,
+        duration=5000,
+        disposal=2,
+        loop=0,
     )
 
-    img = Image.open(rel_to_abspath("../temp.webp"))
-    img.info.pop("background", None)
-    img.save(rel_to_abspath("../temp.gif"), "gif", save_all=True)
-
-    with open(rel_to_abspath("../temp.gif"), "rb") as file_handle:
-        b64 = base64.b64encode(file_handle.read())
-    # os.unlink(rel_to_abspath("../temp.webp"))
-    return b64
-
-
-print(
-    loadout_to_b64(
-        [
-            "https://splatoon.oatmealdome.me/img/weapon/thunder/Shooter_Short_00.webp",
-            "https://splatoon.oatmealdome.me/img/weapon/thunder/Blaster_Short_00.webp",
-            "https://splatoon.oatmealdome.me/img/weapon/thunder/Shelter_Compact_00.webp",
-            "https://splatoon.oatmealdome.me/img/weapon/thunder/Charger_Normal_00.webp",
-        ]
-    )
-)
+    with open(gif_path, "rb") as fh:
+        b64 = base64.b64encode(fh.read())
+    os.unlink(gif_path)
+    return b64.decode("utf-8")
