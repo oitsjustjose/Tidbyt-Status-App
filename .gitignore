@@ -11,3 +11,6 @@ src/main.build/
 src/main.dist/
 src/main.onefile-build/
 src/main.exe
+Lib/
+Scripts/
+pyvenv.cfg
