@@ -21,8 +21,8 @@ def update_template(template_path: str, out_path: str, replacers: dict):
         replacers (dict): a Dict[str,str] whose keys are in the template,
             and whose values will replace their keys in the template
     """
-    if not os.path.exists("../out"):
-        os.mkdir("../out")
+    if not os.path.exists(rel_to_abspath("../out")):
+        os.mkdir(rel_to_abspath("../out"))
     with open(template_path, "r", encoding="utf-8") as file_handle:
         data = file_handle.read()
     for key in replacers:
