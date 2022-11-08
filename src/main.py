@@ -1,3 +1,4 @@
+"""The mainfile"""
 import json
 from dataclasses import dataclass
 from datetime import datetime
@@ -8,7 +9,7 @@ import dateutil.parser
 from bs4 import BeautifulSoup
 from pywinauto import Desktop
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.chrome.options import Options
 
 import pixlet
 from images import loadout_to_b64
@@ -39,12 +40,12 @@ CACHED: Cache = None
 def get_salmon_run_data() -> List[SalmonRunEvent]:
     """Scrapes salmon run data"""
     global CACHED
-    if CACHED and CACHED.last_update.date == datetime.now().date:
+    if CACHED and CACHED.last_update.date() == datetime.now().date():
         return CACHED.event
 
     options = Options()
     options.add_argument("--headless")
-    driver = webdriver.Firefox(options=options)
+    driver = webdriver.Chrome(options=options)
     driver.get("https://splatoon.oatmealdome.me/three/salmon-run")
 
     main_el = driver.page_source
@@ -118,7 +119,10 @@ def main():
                         pixlet.display(rel_to_abspath("../recording/paused.webp"))
                     sleep(rotation_time)
             else:
-                if not showing_sploon:  # prevents overworking
+                # Only re-render a .star file if the cache should have expired or we hadn't rendered one yet
+                if not showing_sploon or (
+                    CACHED and CACHED.last_update.date() != datetime.now().date()
+                ):  # prevents overworking
                     salmon_run = get_salmon_run_data()[0]
 
                     render_file = rel_to_abspath("../templates/rendered.star")
