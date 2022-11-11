@@ -45,6 +45,7 @@ def get_salmon_run_data() -> List[SalmonRunEvent]:
 
     options = Options()
     options.add_argument("--headless")
+    options.add_experimental_option("excludeSwitches", ["enable-logging"])
     driver = webdriver.Chrome(options=options)
     driver.get("https://splatoon.oatmealdome.me/three/salmon-run")
 
