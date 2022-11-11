@@ -101,9 +101,15 @@ def main():
                 filter(lambda x: x, [w.window_text() for w in desktop.windows()])
             )
 
+            huddle_windows = list(filter(lambda x: "Huddle with" in x, windows))
+
             if "Zoom Meeting" in windows:
                 showing_sploon = False
                 pixlet.display(rel_to_abspath("../zoom/meeting.webp"))
+                sleep(rotation_time)
+            if huddle_windows:
+                showing_sploon = False
+                pixlet.display(rel_to_abspath("../slack/huddle.webp"))
                 sleep(rotation_time)
             elif "obs64" in windows:
                 showing_sploon = False
