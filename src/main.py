@@ -2,12 +2,13 @@
 import json
 from dataclasses import dataclass
 from datetime import datetime
-from time import sleep, time
+from time import sleep
 from typing import List
 
 import dateutil.parser
 from bs4 import BeautifulSoup
 from pywinauto import Desktop
+from pywinauto.controls.hwndwrapper import InvalidWindowHandle
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -32,6 +33,16 @@ class Cache:
 
     last_update: datetime
     event: List[SalmonRunEvent]
+
+
+@dataclass
+class RenderType:
+    HUDDLE = "HUDDLE"
+    OBS_PAUSED = "OBS_PAUSED"
+    OBS_RECORDING = "OBS_RECORDING"
+    OBS_STREAMING = "OBS_STREAMING"
+    SPLATOON = "SPLATOON"
+    ZOOM = "ZOOM"
 
 
 CACHED: Cache = None
@@ -93,72 +104,90 @@ def get_salmon_run_data() -> List[SalmonRunEvent]:
 def main():
     """The main run function of the application"""
     desktop = Desktop()
-    showing_sploon = False
-    rotation_time = 15  # the amount of time between tidbyt app rotations
+    rendering = ""
 
     while True:
         try:
-            start_time = time()
-            windows = []
-            for window in desktop.windows():
-                try:
-                    txt = window.window_text()
-                    if txt:
-                        windows.append(txt)
-                except:
-                    pass
+            windows = list(
+                filter(
+                    lambda x: x,  # Filter out empty vals
+                    [w.window_text() for w in desktop.windows()],
+                )
+            )
 
-            proc_time = time() - start_time
-            huddle_windows = list(filter(lambda x: "Huddle" in x, windows))
+            huddle_windows = list(filter(lambda x: "huddle" in x.lower(), windows))
+            obs_windows = list(filter(lambda x: "obs" in x.lower(), windows))
 
             if "Zoom Meeting" in windows:
-                showing_sploon = False
-                pixlet.display(rel_to_abspath("../zoom/meeting.webp"), installation_id="status")
-                sleep(max(0, rotation_time-proc_time))
-            if huddle_windows:
-                showing_sploon = False
-                pixlet.display(rel_to_abspath("../slack/huddle.webp"), installation_id="status")
-                sleep(max(0, rotation_time-proc_time))
-            elif "obs64" in windows:
-                showing_sploon = False
+                if rendering != RenderType.ZOOM:
+                    pixlet.display(
+                        rel_to_abspath("../zoom/meeting.webp"),
+                        installation_id="status",
+                    )
+                    rendering = RenderType.ZOOM
+            elif huddle_windows:
+                if rendering != RenderType.HUDDLE:
+                    pixlet.display(
+                        rel_to_abspath("../slack/huddle.webp"),
+                        installation_id="status",
+                    )
+                    rendering = RenderType.HUDDLE
+            elif obs_windows:
                 with open(
                     rel_to_abspath("../status"), "r", encoding="utf-8"
                 ) as file_handle:
                     data = json.loads(file_handle.read())
                     if data["STREAMING"]:
-                        pixlet.display(rel_to_abspath("../streaming/active.webp"), installation_id="status")
+                        if rendering != RenderType.OBS_STREAMING:
+                            pixlet.display(
+                                rel_to_abspath("../streaming/active.webp"),
+                                installation_id="status",
+                            )
+                            rendering = RenderType.OBS_STREAMING
                     elif data["RECORDING"]:
-                        pixlet.display(rel_to_abspath("../recording/active.webp"), installation_id="status")
+                        if rendering != RenderType.OBS_RECORDING:
+                            pixlet.display(
+                                rel_to_abspath("../recording/active.webp"),
+                                installation_id="status",
+                            )
+                            rendering = RenderType.OBS_RECORDING
                     else:
-                        pixlet.display(rel_to_abspath("../recording/paused.webp"), installation_id="status")
-                    sleep(max(0, rotation_time-proc_time))
+                        if rendering != RenderType.OBS_PAUSED:
+                            pixlet.display(
+                                rel_to_abspath("../recording/paused.webp"),
+                                installation_id="status",
+                            )
+                            rendering = RenderType.OBS_PAUSED
             else:
                 # Only re-render a .star file if the cache should have expired or we hadn't rendered one yet
-                if not showing_sploon or (
+                if not CACHED or (
                     CACHED and CACHED.last_update.date() != datetime.now().date()
                 ):  # prevents overworking
-                    salmon_run = get_salmon_run_data()[0]
+                    if rendering != RenderType.SPLATOON:
+                        salmon_run = get_salmon_run_data()[0]
 
-                    render_file = rel_to_abspath("../templates/rendered.star")
-                    pixlet.update_template(
-                        rel_to_abspath("../templates/splatoon.star"),
-                        render_file,
-                        {
-                            "<IMAGE>": loadout_to_b64(salmon_run.loadout),
-                            "<START_DATE>": f"{salmon_run.start.month}/{salmon_run.start.day} {salmon_run.start.hour%12}:{str(salmon_run.start.minute).zfill(2)} {'AM' if salmon_run.start.hour < 12 else 'PM'}",
-                            "<END_DATE>": f"{salmon_run.end.month}/{salmon_run.end.day} {salmon_run.end.hour%12}:{str(salmon_run.end.minute).zfill(2)} {'AM' if salmon_run.end.hour < 12 else 'PM'}",
-                            "<STAGE>": salmon_run.stage_name,
-                        },
-                    )
-                    pixlet.render(render_file)
-                    pixlet.display(
-                        render_file.replace(".star", ".webp"),
-                        installation_id="status",
-                    )
-                    showing_sploon = True
-                sleep(5)
+                        render_file = rel_to_abspath("../templates/rendered.star")
+                        pixlet.update_template(
+                            rel_to_abspath("../templates/splatoon.star"),
+                            render_file,
+                            {
+                                "<IMAGE>": loadout_to_b64(salmon_run.loadout),
+                                "<START_DATE>": f"{salmon_run.start.month}/{salmon_run.start.day} {salmon_run.start.hour%12}:{str(salmon_run.start.minute).zfill(2)} {'AM' if salmon_run.start.hour < 12 else 'PM'}",
+                                "<END_DATE>": f"{salmon_run.end.month}/{salmon_run.end.day} {salmon_run.end.hour%12}:{str(salmon_run.end.minute).zfill(2)} {'AM' if salmon_run.end.hour < 12 else 'PM'}",
+                                "<STAGE>": salmon_run.stage_name,
+                            },
+                        )
+                        pixlet.render(render_file)
+                        pixlet.display(
+                            render_file.replace(".star", ".webp"),
+                            installation_id="status",
+                        )
+                        rendering = RenderType.SPLATOON
         except KeyboardInterrupt:
             break
+        except InvalidWindowHandle:
+            continue
+        sleep(1)
 
 
 if __name__ == "__main__":
