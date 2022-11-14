@@ -2,7 +2,7 @@
 import json
 from dataclasses import dataclass
 from datetime import datetime
-from time import sleep
+from time import sleep, time
 from typing import List
 
 import dateutil.parser
@@ -98,20 +98,27 @@ def main():
 
     while True:
         try:
-            windows = list(
-                filter(lambda x: x, [w.window_text() for w in desktop.windows()])
-            )
+            start_time = time()
+            windows = []
+            for window in desktop.windows():
+                try:
+                    txt = window.window_text()
+                    if txt:
+                        windows.append(txt)
+                except:
+                    pass
 
-            huddle_windows = list(filter(lambda x: "Huddle with" in x, windows))
+            proc_time = time() - start_time
+            huddle_windows = list(filter(lambda x: "Huddle" in x, windows))
 
             if "Zoom Meeting" in windows:
                 showing_sploon = False
-                pixlet.display(rel_to_abspath("../zoom/meeting.webp"))
-                sleep(rotation_time)
+                pixlet.display(rel_to_abspath("../zoom/meeting.webp"), installation_id="status")
+                sleep(max(0, rotation_time-proc_time))
             if huddle_windows:
                 showing_sploon = False
-                pixlet.display(rel_to_abspath("../slack/huddle.webp"))
-                sleep(rotation_time)
+                pixlet.display(rel_to_abspath("../slack/huddle.webp"), installation_id="status")
+                sleep(max(0, rotation_time-proc_time))
             elif "obs64" in windows:
                 showing_sploon = False
                 with open(
@@ -119,12 +126,12 @@ def main():
                 ) as file_handle:
                     data = json.loads(file_handle.read())
                     if data["STREAMING"]:
-                        pixlet.display(rel_to_abspath("../streaming/active.webp"))
+                        pixlet.display(rel_to_abspath("../streaming/active.webp"), installation_id="status")
                     elif data["RECORDING"]:
-                        pixlet.display(rel_to_abspath("../recording/active.webp"))
+                        pixlet.display(rel_to_abspath("../recording/active.webp"), installation_id="status")
                     else:
-                        pixlet.display(rel_to_abspath("../recording/paused.webp"))
-                    sleep(rotation_time)
+                        pixlet.display(rel_to_abspath("../recording/paused.webp"), installation_id="status")
+                    sleep(max(0, rotation_time-proc_time))
             else:
                 # Only re-render a .star file if the cache should have expired or we hadn't rendered one yet
                 if not showing_sploon or (
@@ -146,7 +153,7 @@ def main():
                     pixlet.render(render_file)
                     pixlet.display(
                         render_file.replace(".star", ".webp"),
-                        installation_id="SalmonRun",
+                        installation_id="status",
                     )
                     showing_sploon = True
                 sleep(5)
