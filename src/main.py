@@ -185,6 +185,7 @@ def main():
                             installation_id="status",
                         )
                         rendering = RenderType.SPLATOON
+                    sleep(1)
         except KeyboardInterrupt:
             break
         except InvalidWindowHandle:
