@@ -160,8 +160,10 @@ def main():
                             rendering = RenderType.OBS_PAUSED
             else:
                 # Only re-render a .star file if the cache should have expired or we hadn't rendered one yet
-                if not CACHED or (
-                    CACHED and CACHED.last_update.date() != datetime.now().date()
+                if (
+                    not CACHED
+                    or rendering != RenderType.SPLATOON
+                    or (CACHED and CACHED.last_update.date() != datetime.now().date())
                 ):  # prevents overworking
                     if rendering != RenderType.SPLATOON:
                         salmon_run = get_salmon_run_data()[0]
@@ -187,7 +189,7 @@ def main():
             break
         except InvalidWindowHandle:
             continue
-        sleep(1)
+        sleep(0.5)
 
 
 if __name__ == "__main__":
