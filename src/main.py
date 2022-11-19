@@ -1,5 +1,6 @@
 """The mainfile"""
 import json
+import traceback
 from dataclasses import dataclass
 from datetime import datetime
 from time import sleep
@@ -159,16 +160,13 @@ def main():
                             )
                             rendering = RenderType.OBS_PAUSED
             else:
-                # Only re-render a .star file if the cache should have expired or we hadn't rendered one yet
-                if (
-                    not CACHED
-                    or rendering != RenderType.SPLATOON
-                    or (CACHED and CACHED.last_update.date() != datetime.now().date())
-                ):  # prevents overworking
-                    if rendering != RenderType.SPLATOON:
-                        salmon_run = get_salmon_run_data()[0]
+                # If the uploaded render isn't already splatoon, push it
+                if rendering != RenderType.SPLATOON:
+                    render_file = rel_to_abspath("../templates/rendered.star")
 
-                        render_file = rel_to_abspath("../templates/rendered.star")
+                    # If there's not already *good* data in the template
+                    if not CACHED or CACHED.last_update.date() != datetime.now().date():
+                        salmon_run = get_salmon_run_data()[0]
                         pixlet.update_template(
                             rel_to_abspath("../templates/splatoon.star"),
                             render_file,
@@ -180,17 +178,30 @@ def main():
                             },
                         )
                         pixlet.render(render_file)
-                        pixlet.display(
-                            render_file.replace(".star", ".webp"),
-                            installation_id="status",
-                        )
-                        rendering = RenderType.SPLATOON
-                    sleep(1)
+
+                    pixlet.display(
+                        render_file.replace(".star", ".webp"),
+                        installation_id="status",
+                    )
+                    rendering = RenderType.SPLATOON
         except KeyboardInterrupt:
             break
         except InvalidWindowHandle:
             continue
-        sleep(0.5)
+        except Exception as ex:
+            with open(
+                rel_to_abspath("../out.log"), "a+", encoding="utf-8"
+            ) as log_handle:
+                log_handle.write(f"{ex}\n")
+                tb_lines = [
+                    line.rstrip("\n")
+                    for line in traceback.format_exception(
+                        ex.__class__, ex, ex.__traceback__
+                    )
+                ]
+
+                [log_handle.write(f"{x}\n") for x in tb_lines]
+        sleep(1)
 
 
 if __name__ == "__main__":
