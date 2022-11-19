@@ -25,5 +25,4 @@ trio==0.22.0
 trio-websocket==0.9.2
 urllib3==1.26.12
 uuid==1.30
-webptools==0.0.9
 wsproto==1.2.0

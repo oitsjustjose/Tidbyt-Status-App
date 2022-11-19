@@ -37,9 +37,7 @@ def loadout_to_b64(loadout: List[str]) -> str:
     frames: List[Image.Image] = []
     for img_url in loadout:
         path = download_image(img_url)
-        # Convert webp to png
-        dwebp(input_image=path, output_image=f"{path}.png", option="-o")
-        frames.append(Image.open(path).resize((24, 24)))
+        frames.append(Image.open(path).convert("RGBA").resize((24, 24)))
 
     gif_path = rel_to_abspath("../temp.gif")
     frames[0].save(
