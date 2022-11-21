@@ -117,7 +117,9 @@ def main():
             )
 
             huddle_windows = list(filter(lambda x: "huddle" in x.lower(), windows))
-            obs_windows = list(filter(lambda x: "obs" in x.lower(), windows))
+            obs_windows = list(
+                filter(lambda x: "obs" in x.lower() and "64" in x.lower(), windows)
+            )
 
             if "Zoom Meeting" in windows:
                 if rendering != RenderType.ZOOM:
@@ -134,6 +136,7 @@ def main():
                     )
                     rendering = RenderType.HUDDLE
             elif obs_windows:
+                print("e")
                 with open(
                     rel_to_abspath("../status"), "r", encoding="utf-8"
                 ) as file_handle:
