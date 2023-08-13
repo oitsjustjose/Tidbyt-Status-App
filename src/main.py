@@ -12,6 +12,8 @@ from pywinauto import Desktop
 from pywinauto.controls.hwndwrapper import InvalidWindowHandle
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
 import pixlet
 from images import loadout_to_b64
@@ -58,14 +60,14 @@ def get_salmon_run_data() -> List[SalmonRunEvent]:
     options = Options()
     options.add_argument("--headless")
     options.add_experimental_option("excludeSwitches", ["enable-logging"])
-    driver = webdriver.Chrome(options=options)
+    driver = webdriver.Chrome(
+        service=Service(ChromeDriverManager().install()), options=options
+    )
     driver.get("https://splatoon.oatmealdome.me/three/salmon-run")
 
     main_el = driver.page_source
     main_el = BeautifulSoup(main_el, features="html.parser")
-    main_el = main_el.body.find("main", attrs={"role": "main"}).find(
-        "div", attrs={"class": "d-grid gap-3"}
-    )
+    main_el = main_el.body.find("main").find("div", attrs={"class": "d-grid gap-3"})
 
     # The row where the datetime is shown when the evt. will occur
     times: List[str] = [
