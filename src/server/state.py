@@ -4,7 +4,7 @@ from threading import Thread
 from time import sleep
 from typing import Dict
 
-from pixlet import push_to_tidbyt
+from pixlet import PixletHelper
 from renderables import Renderable
 from renderables.forgeserv import ForgeServ
 
@@ -47,6 +47,7 @@ class StateManager:
         self.timeout = timeout
         self.thread: Thread = None
         self.stop_thread = False
+        self.__pixlet_helper = PixletHelper()
         self.__start()
 
     def update(self, new_state: AppState):
@@ -59,7 +60,7 @@ class StateManager:
             return self.state
 
         self.state = new_state
-        push_to_tidbyt(self.renderables[self.state])
+        self.__pixlet_helper.push_to_tidbyt(self.renderables[self.state])
 
     def __start(self):
         """Instantiates and starts the worker thread
@@ -76,5 +77,5 @@ class StateManager:
         """A looping task that renders and pushes the correct pixlet based on state"""
         while not self.stop_thread:
             if self.renderables[self.state].is_dynamic:
-                push_to_tidbyt(self.renderables[self.state])
+                self.__pixlet_helper.push_to_tidbyt(self.renderables[self.state])
             sleep(self.timeout)
