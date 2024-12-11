@@ -1,6 +1,7 @@
 """A Python Wrapper for Pixlet ops"""
 
 import subprocess
+from os import getenv
 from pathlib import Path
 from platform import machine
 
@@ -9,8 +10,9 @@ from renderables import Renderable
 
 class PixletHelper:
     def __init__(self):
-        self.root_path = Path("./").resolve()
-        self.pixlet = self.root_path.joinpath(f"pixlet.{machine()}").resolve()
+        self.root_path: Path = Path("./").resolve()
+        self.pixlet: Path = self.root_path.joinpath(f"pixlet.{machine()}").resolve()
+        self.device_id: str = getenv("TIDBYT_DEVICE_ID", "")
 
     def push_to_tidbyt(self, renderable: Renderable) -> None:
         """Pushes a renderable to the Tidbyt device
@@ -42,19 +44,13 @@ class PixletHelper:
         Args:
             path (Path): The path to the given rendered webp
         """
-
-        with open(
-            self.root_path.joinpath("device_id").resolve(), "r", encoding="utf8"
-        ) as handle:
-            dev_id = handle.read()
-
         with subprocess.Popen(
             [
                 self.pixlet,
                 "push",
                 "--installation-id",
                 "automation",
-                dev_id,
+                self.device_id,
                 str(path),
             ]
         ) as proc:
