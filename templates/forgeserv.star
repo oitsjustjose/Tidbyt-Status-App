@@ -12,19 +12,26 @@ def main():
             main_align="space_around",
             cross_align="center",
             children=[
-                render.Image(ICON, width=16, height=16),
-                render.Marquee(
-                    width=60,
-                    child=render.Text(
-                        "<SERVER-NAME> (<ONLINE-PLAYERS> / <MAX-PLAYERS>)",
-                        color="#a3be8c",
-                        font="tom-thumb",
-                    ),
+                render.Row(
+                    expanded=True,
+                    main_align="space_evenly",
+                    cross_align="center",
+                    children=[
+                        render.Image(ICON, width=16, height=16),
+                        render.Marquee(
+                            width=40,
+                            child=render.Text(
+                                "<SERVER-NAME>",
+                                color="#a3be8c",
+                                font="tom-thumb",
+                            ),
+                        ),
+                    ],
                 ),
                 render.Marquee(
                     width=60,
                     child=render.Text(
-                        "Players: <PLAYER-LIST>",
+                        "<ONLINE-PLAYERS> of <MAX-PLAYERS> Players",
                         color="#8fbcbb",
                         font="tom-thumb",
                     ),
