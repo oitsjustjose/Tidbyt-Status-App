@@ -3,6 +3,9 @@ __pycache__
 device_id
 geckodriver.log
 Lib/
+main.dist
+main.exe
+main.onefile-build
 out.log
 pixlet
 pyvenv.cfg
@@ -16,6 +19,7 @@ status
 status
 templates/rendered*
 test.py
+Tidbyt-Desktop-Companion.exe
 tmp.star
 tmp.webp
 weapons
