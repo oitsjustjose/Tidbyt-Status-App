@@ -38,11 +38,12 @@ class PixletHelper:
 
         return self.root_path.joinpath("tmp.webp").resolve()
 
-    def __display(self, path: Path) -> None:
+    def __display(self, path: Path, attempt=0) -> None:
         """Pushes a given rendered webp file to the pixlet on the same installation id
 
         Args:
             path (Path): The path to the given rendered webp
+            attempt (int, optional): Used to track recursive calls in case pushing fails. Defaults to 0.
         """
         with subprocess.Popen(
             [
@@ -54,7 +55,9 @@ class PixletHelper:
                 str(path),
             ]
         ) as proc:
-            proc.wait()
+            exit_code = proc.wait()
+            if exit_code != 0 and attempt < 5:
+                self.__display(path, attempt=attempt + 1)
 
     def __prepare_file(self, renderable: Renderable) -> Path:
         """Prepares a given pixlet star file. If the file is a template, checks the template keys and prepares the template before writing to the temp path
