@@ -5,7 +5,7 @@ from os import getenv
 from pathlib import Path
 from platform import machine
 
-from renderables import Renderable
+from server.renderables import Renderable
 
 
 class PixletHelper:
