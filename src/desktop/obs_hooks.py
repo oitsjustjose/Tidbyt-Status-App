@@ -1,12 +1,12 @@
 import urllib.request
 from os import getenv
 
-from common.appstate import AppState
+from src.common.appstate import AppState
 
 
 def on_event(event):
     state: AppState = AppState.IDLE
-    backend_uri = getenv("TIDBYT_SERVER_URI", "http://172.16.1.6")
+    backend_uri = getenv("TIDBYT_SERVER_URI", "http://172.16.1.6:8000")
 
     if event == obspython.OBS_FRONTEND_EVENT_RECORDING_STARTED:
         state = AppState.OBS_RECORDING
@@ -18,7 +18,7 @@ def on_event(event):
     ):
         state = AppState.OBS_PAUSED
 
-    urllib.request.urlopen(f"{backend_uri}?new_state={state.value}")
+    urllib.request.urlopen(f"{backend_uri}?new_state={state.value}", data={})
 
 
 def script_load(_):
@@ -26,6 +26,6 @@ def script_load(_):
 
 
 def script_unload():
-    backend_uri = getenv("TIDBYT_SERVER_URI", "http://172.16.1.6")
+    backend_uri = getenv("TIDBYT_SERVER_URI", "http://172.16.1.6:8000")
 
-    urllib.request.urlopen(f"{backend_uri}?new_state={AppState.IDLE.value}")
+    urllib.request.urlopen(f"{backend_uri}?new_state={AppState.IDLE.value}", data={})
