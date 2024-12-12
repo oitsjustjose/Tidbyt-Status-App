@@ -1,4 +1,3 @@
-from enum import Enum
 from pathlib import Path
 from threading import Thread
 from time import sleep
@@ -8,16 +7,7 @@ from pixlet import PixletHelper
 from renderables import Renderable
 from renderables.forgeserv import ForgeServ
 
-
-class AppState(Enum):
-    IDLE = 0
-    MEETING = 1
-    OBS_PAUSED = 2
-    OBS_RECORDING = 3
-    OBS_STREAMING = 4
-
-
-ROOT = Path("./")
+from common.appstate import AppState
 
 
 class StateManager:
@@ -30,17 +20,15 @@ class StateManager:
         self.state: AppState = AppState.IDLE
         self.renderables: Dict[AppState, Renderable] = {
             AppState.IDLE: ForgeServ(),
-            AppState.MEETING: Renderable(
-                ROOT.joinpath("templates/meeting.star").resolve()
-            ),
+            AppState.MEETING: Renderable(Path("./templates/meeting.star").resolve()),
             AppState.OBS_PAUSED: Renderable(
-                ROOT.joinpath("templates/obs/paused.star").resolve()
+                Path("./templates/obs/paused.star").resolve()
             ),
             AppState.OBS_RECORDING: Renderable(
-                ROOT.joinpath("templates/obs/recording.star").resolve()
+                Path("./templates/obs/recording.star").resolve()
             ),
             AppState.OBS_STREAMING: Renderable(
-                ROOT.joinpath("templates/obs/streaming.star").resolve()
+                Path("./templates/obs/streaming.star").resolve()
             ),
         }
         # Thread related activities & vars
