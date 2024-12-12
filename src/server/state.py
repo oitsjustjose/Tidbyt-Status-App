@@ -7,7 +7,7 @@ from pixlet import PixletHelper
 from renderables import Renderable
 from renderables.forgeserv import ForgeServ
 
-from common.appstate import AppState
+from src.common.appstate import AppState
 
 
 class StateManager:
