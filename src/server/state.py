@@ -3,11 +3,11 @@ from threading import Thread
 from time import sleep
 from typing import Dict
 
-from pixlet import PixletHelper
-from renderables import Renderable
-from renderables.forgeserv import ForgeServ
+from server.pixlet import PixletHelper
+from server.renderables import Renderable
+from server.renderables.forgeserv import ForgeServ
 
-from src.common.appstate import AppState
+from common.appstate import AppState
 
 
 class StateManager:

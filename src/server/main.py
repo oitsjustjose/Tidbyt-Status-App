@@ -6,8 +6,8 @@ Changes come in via WebAPI so we can make a lightweight desktop client and leave
 Also allows the TidByt to still have forgeserv.net data without needing to be stood up
 """
 
-from state import AppState, StateManager
 from fastapi import FastAPI
+from server.state import AppState, StateManager
 
 app = FastAPI()
 state_mgr = StateManager(timeout=10)
