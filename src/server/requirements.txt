@@ -22,7 +22,6 @@ MarkupSafe==3.0.2
 mdurl==0.1.2
 outcome==1.2.0
 packaging==24.2
-psutil==6.1.0
 pycparser==2.21
 pydantic==2.10.3
 pydantic_core==2.27.1
@@ -44,7 +43,6 @@ typer==0.15.1
 typing_extensions==4.12.2
 urllib3==1.26.12
 uvicorn==0.32.1
-uvloop==0.21.0
 watchfiles==1.0.3
 websockets==14.1
 wsproto==1.2.0
