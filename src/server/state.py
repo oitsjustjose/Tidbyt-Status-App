@@ -1,13 +1,13 @@
+import logging
 from pathlib import Path
 from threading import Thread
 from time import sleep
 from typing import Dict
 
+from common.appstate import AppState
 from server.pixlet import PixletHelper
 from server.renderables import Renderable
 from server.renderables.forgeserv import ForgeServ
-
-from common.appstate import AppState
 
 
 class StateManager:
@@ -17,6 +17,7 @@ class StateManager:
         Args:
             timeout (int, optional): How long to wait between iterations (in seconds). Defaults to 1.
         """
+        self.logger = logging.getLogger("uvicorn.error")
         self.state: AppState = AppState.IDLE
         self.renderables: Dict[AppState, Renderable] = {
             AppState.IDLE: ForgeServ(),
@@ -36,7 +37,6 @@ class StateManager:
         self.thread: Thread = None
         self.stop_thread = False
         self.__pixlet_helper = PixletHelper()
-        self.__start()
 
     def update(self, new_state: AppState):
         """Update the Tidbyt's state, returning the prior state
@@ -50,7 +50,7 @@ class StateManager:
         self.state = new_state
         self.__pixlet_helper.push_to_tidbyt(self.renderables[self.state])
 
-    def __start(self):
+    def start(self):
         """Instantiates and starts the worker thread
 
         Raises:
@@ -60,10 +60,23 @@ class StateManager:
             raise Exception("Thread has already been initialized!")
         self.thread = Thread(target=self.__thread_task, daemon=True)
         self.thread.start()
+        self.logger.info(f"Started thread with tid={self.thread.ident}")
 
     def __thread_task(self):
         """A looping task that renders and pushes the correct pixlet based on state"""
         while not self.stop_thread:
-            if self.renderables[self.state].is_dynamic:
-                self.__pixlet_helper.push_to_tidbyt(self.renderables[self.state])
-            sleep(self.timeout)
+            try:
+                if self.renderables[self.state].is_dynamic:
+                    if not self.__pixlet_helper.push_to_tidbyt(
+                        self.renderables[self.state]
+                    ):
+                        self.logger.warning(
+                            f"Failed to push {self.state.name} to TidByt - pausing for {10 * self.timeout} seconds"
+                        )
+                        sleep(10 * self.timeout)
+                sleep(self.timeout)
+            except Exception as e:
+                self.logger.warning(
+                    f"Thread task ran into an {type(e).__name__}: {str(e)}"
+                )
+                sleep(self.timeout * 2)
