@@ -67,13 +67,7 @@ class StateManager:
         while not self.stop_thread:
             try:
                 if self.renderables[self.state].is_dynamic:
-                    if not self.__pixlet_helper.push_to_tidbyt(
-                        self.renderables[self.state]
-                    ):
-                        self.logger.warning(
-                            f"Failed to push {self.state.name} to TidByt - pausing for {10 * self.timeout} seconds"
-                        )
-                        sleep(10 * self.timeout)
+                    self.__pixlet_helper.push_to_tidbyt(self.renderables[self.state])
                 sleep(self.timeout)
             except Exception as e:
                 self.logger.warning(
