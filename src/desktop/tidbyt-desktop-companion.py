@@ -104,17 +104,13 @@ class Main:
         """
         win_title = win32gui.GetWindowText(hwnd)
 
-        matches: List[MeetingWindow] = list(
-            filter(lambda x: x.matches_title(win_title), self.__meeting_windows)
-        )
+        matches: List[MeetingWindow] = list(filter(lambda x: x.matches_title(win_title), self.__meeting_windows))
 
         if not matches:
             return True
 
         _, pid = win32process.GetWindowThreadProcessId(hwnd)
-        rows = self.__wmi.query(
-            f"SELECT Name FROM Win32_Process WHERE ProcessId = {pid}"
-        )
+        rows = self.__wmi.query(f"SELECT Name FROM Win32_Process WHERE ProcessId = {pid}")
 
         if not any([x.matches_executable(y.Name) for x in matches for y in rows]):
             return True
