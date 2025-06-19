@@ -17,6 +17,7 @@ class PixletHelper:
         self.root_path: Path = Path("./").resolve()
         self.pixlet: Path = self.root_path.joinpath(f"pixlet.{machine()}").resolve()
         self.device_id: str = getenv("TIDBYT_DEVICE_ID", "")
+        self.api_token: str = getenv("TIDBYT_API_TOKEN", "")
 
     def push_to_tidbyt(self, renderable: Renderable) -> bool:
         """Pushes a renderable to the Tidbyt device
@@ -40,9 +41,7 @@ class PixletHelper:
         """
         output_path = self.__prepare_file(renderable)
 
-        with Popen(
-            [self.pixlet, "render", str(output_path)], stdout=PIPE, stderr=PIPE
-        ) as proc:
+        with Popen([self.pixlet, "render", str(output_path)], stdout=PIPE, stderr=PIPE) as proc:
             exit_code = proc.wait()
             stdout, stderr = self.__get_decoded_out(proc)
             if exit_code != 0 and (stdout or stderr):
@@ -64,6 +63,8 @@ class PixletHelper:
             [
                 self.pixlet,
                 "push",
+                "--api-token",
+                self.api_token,
                 "--installation-id",
                 "automation",
                 self.device_id,
@@ -81,9 +82,7 @@ class PixletHelper:
             else:
                 stdout, stderr = self.__get_decoded_out(proc)
                 if exit_code != 0 and (stdout or stderr):
-                    self.logger.warning(
-                        f"__display call failed after 5 attempts: {stdout or stderr}"
-                    )
+                    self.logger.warning(f"__display call failed after 5 attempts: {stdout or stderr}")
                 return False
 
     def __prepare_file(self, renderable: Renderable) -> Path:
@@ -106,11 +105,9 @@ class PixletHelper:
         if renderable.is_dynamic:
             args = renderable.resolve_template_keys()
             for key in renderable.template_keys:
-                if not key in args:
-                    raise Exception(
-                        f"Failed to render Pixlet Configuration for {renderable.for_state.name} -- missing key '{key}'"
-                    )
-                data = data.replace(key, args[key])
+                if key not in args:
+                    raise Exception(f"Failed to render Pixlet Configuration for {str(renderable.file_path)} -- missing key '{key}'")
+                data = data.replace(key, str(args[key]))
 
         with open(output_path, "w", encoding="utf8") as handle:
             handle.write(data)

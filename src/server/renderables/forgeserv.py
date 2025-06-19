@@ -22,7 +22,6 @@ class Server:
 
     max_players: int
     online_players: int
-    server_dynmap_url: Union[None, str]
     server_health: str
     server_icon: str
     server_motd: str
@@ -63,7 +62,6 @@ class ForgeServ(Renderable):
                     Server(
                         max_players=serv["max"],
                         online_players=serv["online"],
-                        server_dynmap_url=serv["dynmap"],
                         server_health=serv["health"],
                         server_icon=serv["icon"],
                         server_motd=serv["motd"],
